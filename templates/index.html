@@ -1,0 +1,195 @@
+$def with (res, i)
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>QunarCrawler</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="./static/css/bootstrap.css" rel="stylesheet">
+    <link href="./static/css/datepicker.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    <link href="./static/css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="./static/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="./static/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="./static/ico/apple-touch-icon-57-precomposed.png">
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/">QunarCrawler</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="/">首页</a></li>
+              <li><a href="/log">log</a></li>
+              <!--<li><a href="#about">关于</a></li>-->
+              <!--<li><a href="#contact">联系</a></li>-->
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <h2>什么是QunarCrawler?</h2>
+      <p></p>
+      <p>
+        顾名思义，通俗地说就是去哪儿网的爬虫。:)
+      </p>
+
+      <p>
+        很多人都有过这样的情况。想定某天的飞机票，但是不知道什么时候去买最合适。QunarCrawler就通过抓取历史的数据，让大家可以看到对于某天的机票，不同时候去买票价是如何变化的。
+      </p>
+        <form class="well" method="GET" action="">
+          <p>
+            <input type="text" class="input-small" placeholder="出发地" name="from_place" 
+            $if (i != None):
+                value="$i.from_place"
+            >
+            <input type="text" class="input-small" placeholder="目的地" name="to_place" 
+            $if (i != None): 
+                value="$i.to_place"
+            >
+          </p>
+          <p>
+            <input id="datepicker" class="input-small" type="text" placeholder="日期" data-date-format="yyyy-mm-dd" name="date" 
+            $if (i != None):
+                value="$i.date"
+            >
+          </p>
+          <p>
+            <select  name="search_type">
+              <option value="book"
+              $if (i != None and i.search_type == "book"):
+					selected="selected"
+              >我想看这天的机票哪天定最便宜</option>
+              <option value="go"
+              $if (i != None and i.search_type == "go"):
+					selected="selected"
+              >我在这天定哪天机票最便宜</option>
+            </select>
+          </p>
+          <p>
+            <button type="submit" class="btn  btn-primary">我要查询!</button>
+          </p>
+          </form>
+
+    $if (res != None and res != []): 
+        <table class="table table-striped">
+            <tr>
+                $for e in res[:22]:
+                    <td>$eval('e.' + i.search_type + '_date')</td>
+            </tr>
+            <tr>
+                $for e in res[:22]:
+                    <td>$e.price</td>
+            </tr>
+                $for e in res[22:]:
+                    <td>$eval('e.' + i.search_type + '_date')</td>
+            </tr>
+            <tr>
+                $for e in res[22:]:
+                    <td>$e.price</td>
+            </tr>
+        </table>
+
+		<div id="chart">
+		</div>
+    $elif (res == []):
+        <div class="alert alert-error">
+		  <h2>抱歉，暂无数据</h2>
+		</div>
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="./static/js/jquery.min.js"></script>
+    <script src="./static/js/bootstrap.js"></script>
+    <script src="./static/js/bootstrap-datepicker.js"></script>
+	<script src="./static/js/highcharts.js"></script>
+    <script type="text/javascript">
+       $$('#datepicker').datepicker();
+    $if (res != None and res != []): 
+       $$(function () {
+	    var chart;
+	    $$(document).ready(function() {
+	        chart = new Highcharts.Chart({
+	            chart: {
+	                renderTo: 'chart',
+	                type: 'line',
+	                marginRight: 130,
+	                marginBottom: 25
+	            },
+	            title: {
+	                text: '价格走势图',
+	                x: -20 //center
+	            },
+	            xAxis: {
+	                categories: ['$eval("res[0]." + i.search_type + "_date")'
+                    $for e in res[1:]:
+                        ,'$eval("e." + i.search_type + "_date")'
+                    ]
+	            },
+	            yAxis: {
+	                title: {
+	                    text: '价格 (￥)'
+	                },
+	                plotLines: [{
+	                    value: 0,
+	                    width: 1,
+	                    color: '#808080'
+	                }]
+	            },
+	            tooltip: {
+	                formatter: function() {
+	                        return '<b>'+ this.series.name +'</b><br/>'+
+	                        this.x +': ￥'+ this.y;
+	                }
+	            },
+	            legend: {
+	                layout: 'vertical',
+	                align: 'right',
+	                verticalAlign: 'top',
+	                x: -10,
+	                y: 100,
+	                borderWidth: 0
+	            },
+	            series: [{
+	                name: '走势',
+	                data: [$res[0].price
+                    $for e in res[1:]:
+                        ,$e.price
+                    ]
+	            }]
+	        });
+	    });
+
+	});
+    </script>
+  </body>
+</html>
+
