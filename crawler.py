@@ -11,9 +11,10 @@ sys.setdefaultencoding('utf8')
 from flight_list import flight_list_lite
 
 def crawler(from_place, to_place):
-    for i in range(5):
-        context = urllib.urlopen('http://ws.qunar.com/holidayService.jcp?lane=' + from_place + '-' + to_place)
-        break
+    try:
+        for i in range(5):
+            context = urllib.urlopen('http://ws.qunar.com/holidayService.jcp?lane=' + from_place + '-' + to_place)
+            break
     except:
         time.sleep(4)
     tree = etree.parse(context)
